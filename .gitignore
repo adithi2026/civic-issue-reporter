@@ -21,4 +21,5 @@ server/uploads/
 # Python (if AI service used)
 __pycache__/
 *.pyc
-venv/
+venv/ 
+model.pth
