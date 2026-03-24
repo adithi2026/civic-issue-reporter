@@ -1,64 +1,66 @@
 import React, { useState } from "react";
+import { reportIssue } from "../services/issueService";
 
 function ReportIssue() {
-
-  const [issue, setIssue] = useState({
+  const [form, setForm] = useState({
     title: "",
     description: "",
-    location: "",
-    image: null
+    image: null,
   });
 
+  const [preview, setPreview] = useState(null);
+  const [result, setResult] = useState(null);
+
   const handleChange = (e) => {
-    const {name, value} = e.target;
-    setIssue({...issue, [name]: value});
+    if (e.target.name === "image") {
+      const file = e.target.files[0];
+      setForm({ ...form, image: file });
+      setPreview(URL.createObjectURL(file));
+    } else {
+      setForm({ ...form, [e.target.name]: e.target.value });
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(issue);
-    alert("Issue submitted successfully!");
+
+    const data = new FormData();
+    data.append("title", form.title);
+    data.append("description", form.description);
+    data.append("image", form.image);
+
+    const res = await reportIssue(data);
+
+    // 🤖 AI result from backend
+    setResult({
+      prediction: res.data.aiPrediction,
+      confidence: res.data.confidence,
+    });
   };
 
   return (
-    <div style={{padding:"40px"}}>
-      <h2>Report an Issue</h2>
+    <div>
+      <h2>📤 Report Issue</h2>
 
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="title"
-          placeholder="Issue Title"
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
+        <input name="title" placeholder="Title" onChange={handleChange} />
+        <textarea name="description" placeholder="Description" onChange={handleChange} />
 
-        <textarea
-          name="description"
-          placeholder="Describe the issue"
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
+        <input type="file" name="image" onChange={handleChange} />
 
-        <input
-          type="text"
-          name="location"
-          placeholder="Location"
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
+        {preview && <img src={preview} alt="preview" width="200" />}
 
-        <input
-          type="file"
-          name="image"
-        />
-        <br /><br />
-
-        <button type="submit">Submit Issue</button>
+        <button type="submit">Submit</button>
       </form>
+
+      {/* 🤖 AI Result */}
+      {result && (
+        <div style={{ marginTop: "20px" }}>
+          <h3>🤖 AI Prediction</h3>
+          <p>Type: {result.prediction}</p>
+          <p>Confidence: {result.confidence}%</p>
+        </div>
+      )}
     </div>
   );
 }
